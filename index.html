@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<meta name="author" content="Paulo Jerônimo">
+<meta name="author" content="Paulo Jerônimo &lt;paulojeronimo@gmail.com&gt;, 2022-05-19">
 <title>NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <link rel="stylesheet" href="./asciidoctor.css">
@@ -15,8 +15,7 @@
 <div id="header">
 <h1>NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</h1>
 <div class="details">
-<span id="author" class="author">Paulo Jerônimo</span><br>
-<span id="email" class="email"><a href="mailto:paulojeronimo@gmail.com">paulojeronimo@gmail.com</a></span><br>
+<span id="author" class="author">Paulo Jerônimo &lt;paulojeronimo@gmail.com&gt;, 2022-05-19</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</div>
@@ -142,7 +141,7 @@ $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ apt install gcc</pre>
+<pre>$ apt install -y gcc</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -150,7 +149,8 @@ $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ apt install tree; export TREE_CHARSET=ascii
+<pre>$ apt install -y tree
+$ export TREE_CHARSET=ascii
 $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 </div>
@@ -159,7 +159,7 @@ $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ apt install bat</pre>
+<pre>$ apt install -y bat</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -167,7 +167,7 @@ $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ export editor=vim
+<pre>$ export EDITOR=vim
 $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 </div>
@@ -198,7 +198,7 @@ $ git config --global --add difftool.prompt false</pre>
 
 $ source ~/.cargo/env
 
-$ rustup target add waswm-32unknow-unknown</pre>
+$ rustup target add wasm32-unknown-unknown</pre>
 </div>
 </div>
 </div>
@@ -233,7 +233,9 @@ My created account: <code>paulojeronimo-test1</code>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash</pre>
+<pre>$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+$ export NVM_DIR="$HOME/.nvm"
+$ [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; \. "$NVM_DIR/nvm.sh"</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -308,6 +310,7 @@ $ batcat src/lib.rs</pre>
 <div class="listingblock">
 <div class="content">
 <pre>$ git status
+$ git add .
 $ git commit -m 'Initial commit'
 $ git log</pre>
 </div>
@@ -405,7 +408,18 @@ the smart contract</a></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ near login</pre>
+<pre>$ near login
+
+Please authorize NEAR CLI on at least one of your accounts.
+
+If your browser doesn't automatically open, please visit this URL
+https://wallet.testnet.near.org/login/?referrer=NEAR+CLI&amp;public_key=ed25519%3A4s1nHZeRDGE5TfFYZkzePeuxvVrGtXbMdVBZXkdvTtZT&amp;success_url=http%3A%2F%2F127.0.0.1%3A5000
+Please authorize at least one account at the URL above.
+
+Which account did you authorize for use with NEAR CLI?
+Enter it here (if not redirected automatically):
+paulojeronimo-test1.testnet
+Logged in as [ paulojeronimo-test1.testnet ] with public key [ ed25519:4s1nHZ... ] successfully</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -527,10 +541,10 @@ View call: paulojeronimo-test1.testnet.get_num()
 <div class="listingblock">
 <div class="content">
 <pre>$ cargo --version
-cargo 1.60.0 (d1fd9fe 2022-03-01)
+cargo 1.61.0 (a028ae4 2022-04-29)
 
 $ rustc --version
-rustc 1.60.0 (7737e0b5c 2022-04-04)
+rustc 1.61.0 (fe5b13d68 2022-05-18)
 
 $ near --version
 3.3.0</pre>
