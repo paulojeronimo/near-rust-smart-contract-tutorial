@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.17">
+<meta name="author" content="Paulo Jerônimo">
+<title>NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</h1>
+<div class="details">
+<span id="author" class="author">Paulo Jerônimo</span><br>
+<span id="email" class="email"><a href="mailto:paulojeronimo@gmail.com">paulojeronimo@gmail.com</a></span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</div>
+<ul class="sectlevel1">
+<li><a href="#introduction">1. Introduction</a></li>
+<li><a href="#container-creation">2. Container creation</a></li>
+<li><a href="#container-configuration-and-packages-installation">3. Container configuration and packages installation</a></li>
+<li><a href="#rust-installation">4. Rust installation</a></li>
+<li><a href="#testnet-wallet-creation">5. Testnet wallet creation</a></li>
+<li><a href="#installing-nvm-and-node">6. Installing nvm and node</a></li>
+<li><a href="#installing-the-near-cli-package">7. Installing the near-cli package</a></li>
+<li><a href="#creating-the-repository">8. Creating the repository</a></li>
+<li><a href="#creating-the-files">9. Creating the files</a></li>
+<li><a href="#breaking-it-down">10. Breaking it down</a></li>
+<li><a href="#test-compile">11. Test &amp; compile</a></li>
+<li><a href="#deploying-the-smart-contract">12. Deploying the smart contract</a></li>
+<li><a href="#invoking-the-methods">13. Invoking the methods</a></li>
+<li><a href="#versioning-for-this-article">14. Versioning for this article</a></li>
+<li><a href="#doing-a-cleanup">15. Doing a cleanup</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="introduction"><a class="anchor" href="#introduction"></a>1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This tutorial will guide you in setting up a Smart Contract development
+environment from the ground up and show you how to compile, test, and
+run your first <a href="https://www.rust-lang.org/">Rust</a> smart contract on
+<a href="https://near.org/">NEAR</a>.</p>
+</div>
+<div class="paragraph">
+<p>This tutorial follows all steps defined in the tutorial
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro">Building a Smart
+Contract in Rust</a> (written by NEAR) <strong>using a
+<a href="https://linuxcontainers.org/">LXC Container</a> that runs Ubuntu 22.04</strong>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>If you are studying blockchain technologies and want to read a
+tutorial similar to this but using the Ethereum Blockchain, consider
+opening <a href="https://paulojeronimo.com/ethereum-helloworld-tutorial">this
+link</a>.</p>
+</li>
+<li>
+<p>If you want to be part of a nice Brazilian Community that is creating
+  many projects and studies about Web 3.0 development, check out the
+<a href="https://www.web3dev.com.br/">web3dev website</a> (<em>in Portuguese</em>).
+Also, see the video <a href="https://www.youtube.com/watch?v=vQfo_TiJ0CY">"Criando
+seu primeiro Smart Contract na NEAR"</a> ("Creating your first smart
+contract at NEAR") created by Daniel Cuckier, one of the leaders of that
+community.</p>
+</li>
+</ol>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="container-creation"><a class="anchor" href="#container-creation"></a>2. Container creation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First,
+<a href="https://linuxcontainers.org/lxd/#get-started">install LXD</a> and do the
+<a href="https://linuxcontainers.org/lxd/getting-started-cli/#initial-configuration">initial
+configuration</a>.
+After that,
+<a href="https://linuxcontainers.org/lxd/getting-started-cli/#launch-a-container">launch
+an Ubuntu 22.04 container</a> that will be named <code>near-tutorial</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc launch ubuntu:22.04 near-tutorial
+$ lxc list
+$ lxc info near-tutorial</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Access the shell of the created container:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc exec near-tutorial /bin/bash</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="container-configuration-and-packages-installation"><a class="anchor" href="#container-configuration-and-packages-installation"></a>3. Container configuration and packages installation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Change the prompt to the most simplest possible:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ export PS1='$ '
+$ echo "!!" &gt;&gt; ~/.bashrc</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Update the APT cache:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ apt update</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Install <code>gcc</code> (Rust will need the <code>cc</code> command when running the
+<a href="#cargo-test"><code>cargo test &#8230;&#8203;</code></a> command for the first time):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ apt install gcc</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Install <code>tree</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ apt install tree; export TREE_CHARSET=ascii
+$ echo "!!" &gt;&gt; ~/.bashrc</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Install <code>batcat</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ apt install bat</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Configure <code>vim</code> as your prefered editor:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ export editor=vim
+$ echo "!!" &gt;&gt; ~/.bashrc</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Configure <code>git</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ # Configure your username and email:
+$ git config --global --edit
+
+$ # Configure the diff tool:
+$ git config --global diff.tool vimdiff
+$ git config --global --add difftool.prompt false</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="rust-installation"><a class="anchor" href="#rust-installation"></a>4. Rust installation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Install Rust:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+$ source ~/.cargo/env
+
+$ rustup target add waswm-32unknow-unknown</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="testnet-wallet-creation"><a class="anchor" href="#testnet-wallet-creation"></a>5. Testnet wallet creation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ref.:
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#creating-a-near-account">Create
+a NEAR account</a> using <a href="https://wallet.testnet.near.org/" class="bare">https://wallet.testnet.near.org/</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+My created account: <code>paulojeronimo-test1</code>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="installing-nvm-and-node"><a class="anchor" href="#installing-nvm-and-node"></a>6. Installing nvm and node</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Install <code>nvm</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Install <code>node</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ nvm install --lts</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="installing-the-near-cli-package"><a class="anchor" href="#installing-the-near-cli-package"></a>7. Installing the near-cli package</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ref.:
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#installing-the-near-cli"><code>near-cli</code>
+installation</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ npm install -g near-cli</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="creating-the-repository"><a class="anchor" href="#creating-the-repository"></a>8. Creating the repository</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ref.:
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#creating-the-repository">Repository
+creation</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ cargo new rust-counter-tutorial --lib</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check the created directory structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ tree rust-counter-tutorial/
+rust-counter-tutorial/
+|-- Cargo.toml
+`-- src
+    `-- lib.rs
+
+1 directory, 2 files</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the generated code:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ cd rust-counter-tutorial</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat Cargo.toml
+$ batcat src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Commit the code:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ git status
+$ git commit -m 'Initial commit'
+$ git log</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="creating-the-files"><a class="anchor" href="#creating-the-files"></a>9. Creating the files</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Read
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#editing-cargotoml">Editing
+Cargo.toml</a>, copy the content of this session to the <code>vim</code> editor and
+save the file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ vim Cargo.toml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Read
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#editing-librs">Editing
+lib.rs</a>, copy the content of this session to the <code>vim</code> editor and
+save the file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ vim src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Commit the changes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ git difftool
+$ git add .
+$ git commit -m 'Smart contract added'</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="breaking-it-down"><a class="anchor" href="#breaking-it-down"></a>10. Breaking it down</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Read the section
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#breaking-it-down">Break
+it down</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="test-compile"><a class="anchor" href="#test-compile"></a>11. Test &amp; compile</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test the code:</p>
+</div>
+<div id="cargo-test" class="listingblock">
+<div class="content">
+<pre>$ cargo test -- --nocapture</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Compile the code:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ cargo build --target wasm32-unknown-unknown --release</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice the created <code>.wasm</code> files:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ find . -type f -name '*.wasm'
+./target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm
+./target/wasm32-unknown-unknown/release/deps/rust_counter_tutorial.wasm</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="deploying-the-smart-contract"><a class="anchor" href="#deploying-the-smart-contract"></a>12. Deploying the smart contract</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ref.:
+<a href="https://docs.near.org/docs/develop/contracts/rust/intro#deploying-the-smart-contract">Deploying
+the smart contract</a></p>
+</div>
+<div class="paragraph">
+<p>Login with <code>near</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ near login</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Your keys are saved in a JSON file in the <code>~/.near-credentials</code> like
+this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ tree ~/.near-credentials/
+/root/.near-credentials/
+└── testnet
+    └── paulojeronimo-test1.testnet.json
+
+1 directory, 1 file</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Deploy the contract:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ accountId=paulojeronimo-test1.testnet</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ near deploy --wasmFile target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm --accountId $accountId
+Starting deployment. Account id: paulojeronimo-test1.testnet, node: https://rpc.testnet.near.org, helper: https://helper.testnet.near.org, file: target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm
+...
+Transaction Id HFqMafkZvFT5vGqvwAAnBARaBWd3N4uNuXuny4tZNPjX
+To see the transaction in the transaction explorer, please open this url in your browser
+https://explorer.testnet.near.org/transactions/HFqMafkZvFT5vGqvwAAnBARaBWd3N4uNuXuny4tZNPjX
+Done deploying to paulojeronimo-test1.testne</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>See the <a href="images/01.png">transacion details</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="invoking-the-methods"><a class="anchor" href="#invoking-the-methods"></a>13. Invoking the methods</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test the <code>increment</code> function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ near call $accountId increment --accountId $accountId
+Scheduling a call: paulojeronimo-test1.testnet.increment()
+Doing account.functionCall()
+Receipt: 7ahifby9pBWwCwFuRQ9JGTsVDQMdrWL2gjWLHdTHHj1b
+	Log [paulojeronimo-test1.testnet]: Increased number to 1
+	Log [paulojeronimo-test1.testnet]: Make sure you don't overflow, my friend.
+Transaction Id 95K1t5moNoZpWsda3uiFmfcrUKgxMpyt56J4m4BbGukP
+To see the transaction in the transaction explorer, please open this url in your browser
+https://explorer.testnet.near.org/transactions/95K1t5moNoZpWsda3uiFmfcrUKgxMpyt56J4m4BbGukP
+''</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>See the <a href="images/02.png">transacion details</a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Update the <code>near</code> (if the command above shows yout that a
+version is available):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ npm i -g near-cli</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Test the <code>decrement</code> function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ near call $accountId decrement --accountId $accountId
+Scheduling a call: paulojeronimo-test1.testnet.decrement()
+Doing account.functionCall()
+Receipt: HnEs7bpX8gBimZSp7m5wRHVSBsTpwiUjPLkwSH312zrP
+	Log [paulojeronimo-test1.testnet]: Decreased number to 0
+	Log [paulojeronimo-test1.testnet]: Make sure you don't overflow, my friend.
+Transaction Id 9JuudStcLDkqoV9xmPuGPZTbXUBbYoWo9y6zsLaCEqrX
+To see the transaction in the transaction explorer, please open this url in your browser
+https://explorer.testnet.near.org/transactions/9JuudStcLDkqoV9xmPuGPZTbXUBbYoWo9y6zsLaCEqrX
+''</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>See the <a href="images/03.png">transacion details</a>.</p>
+</div>
+<div class="paragraph">
+<p>Check counter value</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ near view $accountId get_num --accountId $accountId
+View call: paulojeronimo-test1.testnet.get_num()
+0</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="versioning-for-this-article"><a class="anchor" href="#versioning-for-this-article"></a>14. Versioning for this article</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre>$ cargo --version
+cargo 1.60.0 (d1fd9fe 2022-03-01)
+
+$ rustc --version
+rustc 1.60.0 (7737e0b5c 2022-04-04)
+
+$ near --version
+3.3.0</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="doing-a-cleanup"><a class="anchor" href="#doing-a-cleanup"></a>15. Doing a cleanup</h2>
+<div class="sectionbody">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+This will delete all your work in this tutorial!
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc stop near-tutorial
+$ lxc list
+$ lxc delete near-tutorial</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
