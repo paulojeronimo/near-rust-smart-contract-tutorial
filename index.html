@@ -22,7 +22,7 @@
 <ul class="sectlevel1">
 <li><a href="#introduction">1. Introduction</a></li>
 <li><a href="#container-creation">2. Container creation</a></li>
-<li><a href="#container-configuration-and-packages-installation">3. Container configuration and packages installation</a></li>
+<li><a href="#container-configuration">3. Container configuration and packages installation</a></li>
 <li><a href="#rust-installation">4. Rust installation</a></li>
 <li><a href="#testnet-wallet-creation">5. Testnet wallet creation</a></li>
 <li><a href="#installing-nvm-and-node">6. Installing nvm and node</a></li>
@@ -34,7 +34,14 @@
 <li><a href="#deploying-the-smart-contract">12. Deploying the smart contract</a></li>
 <li><a href="#invoking-the-methods">13. Invoking the methods</a></li>
 <li><a href="#versioning-for-this-article">14. Versioning for this article</a></li>
-<li><a href="#doing-a-cleanup">15. Doing a cleanup</a></li>
+<li><a href="#lxc-useful-commands">15. LXC useful commands</a>
+<ul class="sectlevel2">
+<li><a href="#taking-a-snapshot">15.1. Taking a snapshot after configuration</a></li>
+<li><a href="#restoring-a-snapshot">15.2. Restoring the "after-configuration" snapshot</a></li>
+<li><a href="#create-another-container-from-a-containers-snapshot">15.3. Create another container from a container&#8217;s snapshot</a></li>
+<li><a href="#doing-a-cleanup">15.4. Doing a cleanup</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -123,8 +130,22 @@ $ lxc info near-tutorial</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="container-configuration-and-packages-installation"><a class="anchor" href="#container-configuration-and-packages-installation"></a>3. Container configuration and packages installation</h2>
+<h2 id="container-configuration"><a class="anchor" href="#container-configuration"></a>3. Container configuration and packages installation</h2>
 <div class="sectionbody">
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If you are repeating the execution of this tutorial, to skip the
+following steps, you can use <a href="#restoring-a-snapshot">restore a container
+snapshot</a>.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Change the prompt to the most simplest possible:</p>
 </div>
@@ -191,22 +212,54 @@ $ git config --global diff.tool vimdiff
 $ git config --global --add difftool.prompt false</pre>
 </div>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+At this point, if you intend to repeat this tutorial, you can
+<a href="#taking-a-snapshot">take a snapshot</a> of the container to skip these
+boring configurations the next time.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="rust-installation"><a class="anchor" href="#rust-installation"></a>4. Rust installation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Install Rust:</p>
+<p>Install Rustup and configure your current shell:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre>$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-$ source ~/.cargo/env
-
-$ rustup target add wasm32-unknown-unknown</pre>
+$ source ~/.cargo/env</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Add wasm target to your toolchain:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ rustup target add wasm32-unknown-unknown</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<a href="https://rustwasm.github.io/docs/book/">Why unknown-unkown</a>?
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -214,8 +267,7 @@ $ rustup target add wasm32-unknown-unknown</pre>
 <h2 id="testnet-wallet-creation"><a class="anchor" href="#testnet-wallet-creation"></a>5. Testnet wallet creation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Ref.:
-<a href="https://docs.near.org/docs/develop/contracts/rust/intro#creating-a-near-account">Create
+<p><a href="https://docs.near.org/docs/develop/contracts/rust/intro#creating-a-near-account">Create
 a NEAR account</a> using <a href="https://wallet.testnet.near.org/" class="bare">https://wallet.testnet.near.org/</a>.</p>
 </div>
 <div class="admonitionblock note">
@@ -267,6 +319,19 @@ installation</a>:</p>
 <div class="content">
 <pre>$ npm install -g near-cli</pre>
 </div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+At this point you can again <a href="#taking-a-snapshot">take container
+snapshot</a> named <code>after-installing-near-cli</code>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -365,9 +430,81 @@ $ git commit -m 'Smart contract added'</pre>
 <h2 id="breaking-it-down"><a class="anchor" href="#breaking-it-down"></a>10. Breaking it down</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Read the section
+<p>Ref.:
 <a href="https://docs.near.org/docs/develop/contracts/rust/intro#breaking-it-down">Break
 it down</a>.</p>
+</div>
+<div class="paragraph">
+<p>Before we continue, let&#8217;s review some parts of the smart contract&#8217;s
+source code.
+We&#8217;ll break down the code in pieces in the next section.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s begin our review with the testing code:</p>
+</div>
+<div class="paragraph">
+<p>The <code>increment</code> test:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 104:147 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>decrement</code> test:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 149:158 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>increment_and_reset</code> test:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 160:170 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>struct Counter</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 18:23 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>impl Counter</code> and the <code>fn get_num</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 25:40 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>fn increment</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 51:60 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>fn decrement</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 70:79 src/lib.rs</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>fn reset</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ batcat -r 82:86 src/lib.rs</pre>
+</div>
 </div>
 </div>
 </div>
@@ -430,8 +567,8 @@ Logged in as [ paulojeronimo-test1.testnet ] with public key [ ed25519:4s1nHZ...
 </div>
 </div>
 <div class="paragraph">
-<p>Your keys are saved in a JSON file in the <code>~/.near-credentials</code> like
-this:</p>
+<p>Your keys are saved in a JSON file in the directory
+<code>~/.near-credentials</code>, like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -453,9 +590,17 @@ this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ near deploy --wasmFile target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm --accountId $accountId
-Starting deployment. Account id: paulojeronimo-test1.testnet, node: https://rpc.testnet.near.org, helper: https://helper.testnet.near.org, file: target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm
-...
+<pre>$ near deploy --wasmFile target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm --accountId $accountId</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is the output for the command above:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Starting deployment. Account id: paulojeronimo-test1.testnet, node: https://rpc.testnet.near.org, helper: https://helper.testnet.near.org, file: target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm
+. . .
+. . .
 Transaction Id HFqMafkZvFT5vGqvwAAnBARaBWd3N4uNuXuny4tZNPjX
 To see the transaction in the transaction explorer, please open this url in your browser
 https://explorer.testnet.near.org/transactions/HFqMafkZvFT5vGqvwAAnBARaBWd3N4uNuXuny4tZNPjX
@@ -547,7 +692,13 @@ View call: paulojeronimo-test1.testnet.get_num()
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre>$ cargo --version
+<pre>$ node --version
+v16.15.0
+
+$ npm --version
+8.10.0
+
+$ cargo --version
 cargo 1.61.0 (a028ae4 2022-04-29)
 
 $ rustc --version
@@ -560,8 +711,103 @@ $ near --version
 </div>
 </div>
 <div class="sect1">
-<h2 id="doing-a-cleanup"><a class="anchor" href="#doing-a-cleanup"></a>15. Doing a cleanup</h2>
+<h2 id="lxc-useful-commands"><a class="anchor" href="#lxc-useful-commands"></a>15. LXC useful commands</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="taking-a-snapshot"><a class="anchor" href="#taking-a-snapshot"></a>15.1. Taking a snapshot after configuration</h3>
+<div class="paragraph">
+<p>After the chapter <a href="#container-configuration">Container configuration and packages installation</a> you could stop the
+container and take an snapshot of it in order to restart this tutorial
+more quickly in a second time, if you want:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc stop near-tutorial
+$ lxc stop near-tutorial
+$ lxc snapshot near-tutorial after-configuration</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>See the snapshots taken:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc info near-tutorial | sed -n '/Snapshots/,$p'
+Snapshots:
++---------------------+----------------------+------------+----------+
+|        NAME         |       TAKEN AT       | EXPIRES AT | STATEFUL |
++---------------------+----------------------+------------+----------+
+| after-configuration | 2022/05/20 04:42 -03 |            | NO       |
++---------------------+----------------------+------------+----------+</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Start the container again:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc start near-tutorial</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="restoring-a-snapshot"><a class="anchor" href="#restoring-a-snapshot"></a>15.2. Restoring the "after-configuration" snapshot</h3>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc restore near-tutorial after-configuration</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="create-another-container-from-a-containers-snapshot"><a class="anchor" href="#create-another-container-from-a-containers-snapshot"></a>15.3. Create another container from a container&#8217;s snapshot</h3>
+<div class="paragraph">
+<p>If you create another snapshot called <code>after-installing-near-cli</code> you
+will not be able to restore the container to the snapshot
+<code>after-configuration</code> without losing the work you did until the point
+<code>after-installing-near-cli</code>.</p>
+</div>
+<div class="paragraph">
+<p>In this case, if you try to restore the <code>after-configuration</code> snapshot
+you will get this error:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc restore near-tutorial after-configuration
+Error: Snapshot "after-configuration" cannot be restored due to subsequent snapshot(s). Set zfs.remove_snapshots to override</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to bypass this error, you can type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc storage set default volume.zfs.remove_snapshots=true</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After that, repeat the first command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ !-2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You will notice, however, that the snapshot <code>after-installing-near-cli</code>
+will be lost.</p>
+</div>
+<div class="paragraph">
+<p>Instead of running the commands above, you can create another container
+from the spapshot <code>after-configuration</code> by typing this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ lxc copy near-tutorial/after-configuration near-tutorial-after-configuration</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="doing-a-cleanup"><a class="anchor" href="#doing-a-cleanup"></a>15.4. Doing a cleanup</h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -578,7 +824,9 @@ This will delete all your work in this tutorial!
 <div class="content">
 <pre>$ lxc stop near-tutorial
 $ lxc list
+$ lxc delete near-tutorial/after-configuration
 $ lxc delete near-tutorial</pre>
+</div>
 </div>
 </div>
 </div>
