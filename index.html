@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<meta name="author" content="Paulo Jerônimo &lt;paulojeronimo@gmail.com&gt;, 2022-05-20">
+<meta name="author" content="Paulo Jerônimo &lt;paulojeronimo@gmail.com&gt;, 2022-05-22">
 <title>NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <link rel="stylesheet" href="./asciidoctor.css">
@@ -15,7 +15,7 @@
 <div id="header">
 <h1>NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</h1>
 <div class="details">
-<span id="author" class="author">Paulo Jerônimo &lt;paulojeronimo@gmail.com&gt;, 2022-05-20</span><br>
+<span id="author" class="author">Paulo Jerônimo &lt;paulojeronimo@gmail.com&gt;, 2022-05-22</span><br>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">NEAR/Rust Smart Contract tutorial (using LXC and Ubuntu 22.04)</div>
@@ -24,20 +24,20 @@
 <li><a href="#container-creation">2. Container creation</a></li>
 <li><a href="#container-configuration">3. Container configuration and packages installation</a></li>
 <li><a href="#rust-installation">4. Rust installation</a></li>
-<li><a href="#testnet-wallet-creation">5. Testnet wallet creation</a></li>
-<li><a href="#installing-nvm-and-node">6. Installing nvm and node</a></li>
-<li><a href="#installing-the-near-cli-package">7. Installing the near-cli package</a></li>
-<li><a href="#creating-the-repository">8. Creating the repository</a></li>
-<li><a href="#creating-the-files">9. Creating the files</a></li>
-<li><a href="#breaking-it-down">10. Breaking it down</a></li>
-<li><a href="#test-compile">11. Test &amp; compile</a></li>
+<li><a href="#installing-nvm-and-node">5. Installing nvm and node</a></li>
+<li><a href="#installing-the-near-cli">6. Installing the near-cli package</a></li>
+<li><a href="#creating-the-repository">7. Creating the repository</a></li>
+<li><a href="#creating-the-files">8. Creating the files</a></li>
+<li><a href="#breaking-it-down">9. Breaking it down</a></li>
+<li><a href="#test-compile">10. Test &amp; compile</a></li>
+<li><a href="#testnet-wallet-creation">11. Testnet wallet creation</a></li>
 <li><a href="#deploying-the-smart-contract">12. Deploying the smart contract</a></li>
 <li><a href="#invoking-the-methods">13. Invoking the methods</a></li>
 <li><a href="#versioning-for-this-article">14. Versioning for this article</a></li>
 <li><a href="#lxc-useful-commands">15. LXC useful commands</a>
 <ul class="sectlevel2">
 <li><a href="#taking-a-snapshot">15.1. Taking a snapshot after configuration</a></li>
-<li><a href="#restoring-a-snapshot">15.2. Restoring the "after-configuration" snapshot</a></li>
+<li><a href="#restoring-a-snapshot">15.2. Restoring the "after-installing-the-near-cli" snapshot</a></li>
 <li><a href="#create-another-container-from-a-containers-snapshot">15.3. Create another container from a container&#8217;s snapshot</a></li>
 <li><a href="#doing-a-cleanup">15.4. Doing a cleanup</a></li>
 </ul>
@@ -124,7 +124,7 @@ $ lxc info near-tutorial</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ lxc exec near-tutorial /bin/bash</pre>
+<pre>$ lxc exec near-tutorial bash</pre>
 </div>
 </div>
 </div>
@@ -139,9 +139,9 @@ $ lxc info near-tutorial</pre>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-If you are repeating the execution of this tutorial, to skip the
-following steps, you can use <a href="#restoring-a-snapshot">restore a container
-snapshot</a>.
+If you are repeating the execution of this tutorial, to skip direct
+to the session <a href="#creating-the-repository">Creating the repository</a>, you can
+<a href="#restoring-a-snapshot">restore a container snapshot</a>.
 </td>
 </tr>
 </table>
@@ -151,7 +151,7 @@ snapshot</a>.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ export PS1='near $ '
+<pre>$ export PS1='\u@\h:\w\n$ '
 $ echo "!!" &gt;&gt; ~/.bashrc</pre>
 </div>
 </div>
@@ -209,7 +209,23 @@ $ git config --global --edit
 
 $ # Configure the diff tool:
 $ git config --global diff.tool vimdiff
-$ git config --global --add difftool.prompt false</pre>
+$ git config --global --add difftool.prompt false
+
+$ # Configure some aliases:
+$ git config --global alias.alias "! git config --get-regexp ^alias\\. | sed -e s/^alias\\.// -e s/\\ /\\ =\\ /"
+$ git config --global alias.log-adog "log --all --decorate --oneline --graph"
+
+$ # See the git's global configurations you made:
+$ batcat ~/.gitconfig</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The contents of your <code>~/.gitconfig</code> should be similar (after running the
+commands above) to this:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/gitconfig.png" alt="gitconfig">
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -264,28 +280,7 @@ $ source ~/.cargo/env</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="testnet-wallet-creation"><a class="anchor" href="#testnet-wallet-creation"></a>5. Testnet wallet creation</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p><a href="https://docs.near.org/docs/develop/contracts/rust/intro#creating-a-near-account">Create
-a NEAR account</a> using <a href="https://wallet.testnet.near.org/" class="bare">https://wallet.testnet.near.org/</a>.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-My created account: <code>paulojeronimo-test1</code>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="installing-nvm-and-node"><a class="anchor" href="#installing-nvm-and-node"></a>6. Installing nvm and node</h2>
+<h2 id="installing-nvm-and-node"><a class="anchor" href="#installing-nvm-and-node"></a>5. Installing nvm and node</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Install <code>nvm</code>:</p>
@@ -308,7 +303,7 @@ $ [ -s "$NVM_DIR/nvm.sh" ] &amp;&amp; \. "$NVM_DIR/nvm.sh"</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="installing-the-near-cli-package"><a class="anchor" href="#installing-the-near-cli-package"></a>7. Installing the near-cli package</h2>
+<h2 id="installing-the-near-cli"><a class="anchor" href="#installing-the-near-cli"></a>6. Installing the near-cli package</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Ref.:
@@ -327,8 +322,8 @@ installation</a>:</p>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-At this point you can again <a href="#taking-a-snapshot">take container
-snapshot</a> named <code>after-installing-near-cli</code>.
+At this point, you can again <a href="#taking-a-snapshot">take a container
+snapshot</a> named <code>after-installing-the-near-cli</code>.
 </td>
 </tr>
 </table>
@@ -336,7 +331,7 @@ snapshot</a> named <code>after-installing-near-cli</code>.
 </div>
 </div>
 <div class="sect1">
-<h2 id="creating-the-repository"><a class="anchor" href="#creating-the-repository"></a>8. Creating the repository</h2>
+<h2 id="creating-the-repository"><a class="anchor" href="#creating-the-repository"></a>7. Creating the repository</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Ref.:
@@ -384,13 +379,14 @@ $ batcat src/lib.rs</pre>
 <pre>$ git status
 $ git add .
 $ git commit -m 'Initial commit'
-$ git log</pre>
+$ git log-adog
+$ git alias</pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="creating-the-files"><a class="anchor" href="#creating-the-files"></a>9. Creating the files</h2>
+<h2 id="creating-the-files"><a class="anchor" href="#creating-the-files"></a>8. Creating the files</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Read
@@ -421,13 +417,13 @@ save the file:</p>
 <div class="content">
 <pre>$ git difftool
 $ git add .
-$ git commit -m 'Smart contract added'</pre>
+$ git commit -m 'Added code for the smart contract and for test it'</pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="breaking-it-down"><a class="anchor" href="#breaking-it-down"></a>10. Breaking it down</h2>
+<h2 id="breaking-it-down"><a class="anchor" href="#breaking-it-down"></a>9. Breaking it down</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Ref.:
@@ -509,7 +505,7 @@ We&#8217;ll break down the code in pieces in the next section.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="test-compile"><a class="anchor" href="#test-compile"></a>11. Test &amp; compile</h2>
+<h2 id="test-compile"><a class="anchor" href="#test-compile"></a>10. Test &amp; compile</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Test the code:</p>
@@ -536,6 +532,43 @@ We&#8217;ll break down the code in pieces in the next section.</p>
 ./target/wasm32-unknown-unknown/release/rust_counter_tutorial.wasm
 ./target/wasm32-unknown-unknown/release/deps/rust_counter_tutorial.wasm</pre>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="testnet-wallet-creation"><a class="anchor" href="#testnet-wallet-creation"></a>11. Testnet wallet creation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://docs.near.org/docs/develop/contracts/rust/intro#creating-a-near-account">Create
+a NEAR account</a> using <a href="https://wallet.testnet.near.org/" class="bare">https://wallet.testnet.near.org/</a>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If you don&#8217;t want to keep your wallet and if you are following
+this tutorial only to learn about this technology, you maybe want to use
+<a href="https://temp-mail.org">a temporary email</a> to create your wallet.
+Also, to access <a href="https://temp-mail.org">this service</a> maybe you want to install
+<a href="http://getadblock.com/">the Adblock Google Extension</a> to stop its boring ads.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+My created account for this tutorial: <code>paulojeronimo-test1</code>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -723,7 +756,6 @@ more quickly in a second time, if you want:</p>
 <div class="listingblock">
 <div class="content">
 <pre>$ lxc stop near-tutorial
-$ lxc stop near-tutorial
 $ lxc snapshot near-tutorial after-configuration</pre>
 </div>
 </div>
@@ -749,22 +781,27 @@ Snapshots:
 <pre>$ lxc start near-tutorial</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>After the chapter <a href="#installing-the-near-cli">Installing the near-cli package</a>, you can also repeat the
+steps above taking another snapshot called
+<code>after-installing-the-near-cli</code>.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="restoring-a-snapshot"><a class="anchor" href="#restoring-a-snapshot"></a>15.2. Restoring the "after-configuration" snapshot</h3>
+<h3 id="restoring-a-snapshot"><a class="anchor" href="#restoring-a-snapshot"></a>15.2. Restoring the "after-installing-the-near-cli" snapshot</h3>
 <div class="listingblock">
 <div class="content">
-<pre>$ lxc restore near-tutorial after-configuration</pre>
+<pre>$ lxc restore near-tutorial after-installing-the-near-cli</pre>
 </div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="create-another-container-from-a-containers-snapshot"><a class="anchor" href="#create-another-container-from-a-containers-snapshot"></a>15.3. Create another container from a container&#8217;s snapshot</h3>
 <div class="paragraph">
-<p>If you create another snapshot called <code>after-installing-near-cli</code> you
-will not be able to restore the container to the snapshot
+<p>If you create another snapshot called <code>after-installing-the-near-cli</code>
+you will not be able to restore the container to the snapshot
 <code>after-configuration</code> without losing the work you did until the point
-<code>after-installing-near-cli</code>.</p>
+<code>after-installing-the-near-cli</code>.</p>
 </div>
 <div class="paragraph">
 <p>In this case, if you try to restore the <code>after-configuration</code> snapshot
@@ -793,8 +830,8 @@ Error: Snapshot "after-configuration" cannot be restored due to subsequent snaps
 </div>
 </div>
 <div class="paragraph">
-<p>You will notice, however, that the snapshot <code>after-installing-near-cli</code>
-will be lost.</p>
+<p>You will notice, however, that the snapshot
+<code>after-installing-the-near-cli</code> will be lost.</p>
 </div>
 <div class="paragraph">
 <p>Instead of running the commands above, you can create another container
